@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desglose</title>
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --secondary: #f9f9f9;
+      --accent: #4285f4;
+      --text: #333;
+      --background: #fff;
+      --error: #ea4335;
+      --success: #34a853;
+      --border: #e0e0e0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: var(--primary);
+    }
+
+    .card {
+      background-color: var(--secondary);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: var(--accent);
+    }
+
+    .results {
+      display: none;
+      background-color: var(--secondary);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .result-item {
+      margin-bottom: 10px;
+    }
+
+    .result-label {
+      font-weight: bold;
+    }
+
+    .loading {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .error-message {
+      color: var(--error);
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    .success-message {
+      color: var(--success);
+      text-align: center;
+      margin: 10px 0;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    .refresh-btn {
+      background-color: var(--accent);
+      margin-top: 10px;
+    }
+
+    #updateTime {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: auto;
+      padding: 20px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .crypto-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .crypto-info span {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .demo-data-section {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .demo-data-button {
+      background-color: #34a853;
+    }
+
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* New styles for tabs */
+    .tabs {
+      display: flex;
+      margin-bottom: 15px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: var(--secondary);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      margin-right: 5px;
+    }
+
+    .tab.active {
+      background-color: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+    
+    .optional-label::after {
+      content: " (Opcional)";
+      font-weight: normal;
+      font-style: italic;
+      font-size: 0.9em;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Desglose</h1>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="comprar">COMPRAR</div>
+      <div class="tab" data-tab="vender">VENDER</div>
+    </div>
+    
+    <div class="card">
+      <!-- COMPRAR Tab Content -->
+      <div id="comprarContent" class="tab-content active">
+        <form id="comprarForm">
+          <div>
+            <label for="cryptoSelectComprar">Criptomoneda:</label>
+            <select id="cryptoSelectComprar" required>
+              <option value="">Cargando...</option>
+            </select>
+            <div class="crypto-info">
+              <span id="cryptoPriceComprar"></span>
+              <button type="button" id="refreshBtnComprar" class="refresh-btn">Actualizar Precios</button>
+            </div>
+          </div>
+          
+          <div>
+            <label for="markupComprar">Tasa de Markup (%):</label>
+            <input type="number" id="markupComprar" step="0.1" min="0" required placeholder="Ej: 1.5" value="7">
+          </div>
+          
+          <div>
+            <label for="totalMXNComprar">Total MXN:</label>
+            <input type="number" id="totalMXNComprar" min="any" required placeholder="Cantidad en pesos">
+          </div>
+          
+          <div>
+            <label for="addressComprar" class="optional-label">Dirección de Criptomoneda:</label>
+            <input type="text" id="addressComprar" placeholder="Dirección de la wallet">
+          </div>
+          
+          <button type="submit" id="calculateBtnComprar">Calcular</button>
+        </form>
+      </div>
+      
+      <!-- VENDER Tab Content -->
+      <div id="venderContent" class="tab-content">
+        <form id="venderForm">
+          <div>
+            <label for="cryptoSelectVender">Criptomoneda:</label>
+            <select id="cryptoSelectVender" required>
+              <option value="">Cargando...</option>
+            </select>
+            <div class="crypto-info">
+              <span id="cryptoPriceVender"></span>
+              <button type="button" id="refreshBtnVender" class="refresh-btn">Actualizar Precios</button>
+            </div>
+          </div>
+          
+          <div>
+            <label for="markupVender">Tasa de Markup (%):</label>
+            <input type="number" id="markupVender" step="0.1" min="0" required placeholder="Ej: 1.5" value="7">
+          </div>
+          
+          <div>
+            <label for="cryptoAmountVender">Cantidad de Criptomoneda:</label>
+            <input type="number" id="cryptoAmountVender" min="0.000001" step="0.000001" required placeholder="Cantidad de crypto">
+          </div>
+          
+          <button type="submit" id="calculateBtnVender">Calcular</button>
+        </form>
+      </div>
+      
+      <div id="loader" class="loader"></div>
+      <div id="errorMessage" class="error-message"></div>
+      <div id="updateTime"></div>
+    </div>
+    
+    <!-- Results for COMPRAR -->
+    <div id="resultsComprar" class="results">
+      <h2>Resumen de la Compra</h2>
+      
+      <div class="result-item">
+        <span class="result-label">Cantidad:</span>
+        <span id="resultAmountComprar"></span>
+      </div>
+      
+      <div class="result-item">
+        <span class="result-label">Precio:</span>
+        <span id="resultPriceComprar"></span>
+      </div>
+      
+      <div class="result-item">
+        <span class="result-label">Tasa:</span>
+        <span id="resultMarkupComprar"></span>
+      </div>
+      </br>
+      <div class="result-item">
+        <span class="result-label">Total a Recibir:</span>
+        <span id="resultTotalComprar"></span>
+      </div>
+      
+      <div id="addressResultComprar" class="result-item" style="display: none;">
+        <span class="result-label">Dirección:</span>
+        <span id="resultAddressComprar"></span>
+      </div>
+      
+      <button id="copyBtnComprar">Copiar al Portapapeles</button>
+      <div id="copySuccessComprar" class="success-message">¡Copiado con éxito!</div>
+    </div>
+    
+    <!-- Results for VENDER -->
+    <div id="resultsVender" class="results">
+      <h2>Resumen de la Venta</h2>
+      
+      <div class="result-item">
+        <span class="result-label">Criptomoneda:</span>
+        <span id="resultCryptoVender"></span>
+      </div>
+      
+      <div class="result-item">
+        <span class="result-label">Precio:</span>
+        <span id="resultPriceVender"></span>
+      </div>
+      
+      <div class="result-item">
+        <span class="result-label">Tasa:</span>
+        <span id="resultMarkupVender"></span>
+      </div>
+    </br>
+      <div class="result-item">
+        <span class="result-label">Total a Pagar:</span>
+        <span id="resultTotalVender"></span>
+      </div>
+      
+      <button id="copyBtnVender">Copiar al Portapapeles</button>
+      <div id="copySuccessVender" class="success-message">¡Copiado con éxito!</div>
+    </div>
+  
+  <footer>
+    Datos proporcionados por <a href="https://bitso.com/api/v3/ticker/">Bitso</a>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Elements
+      const comprarForm = document.getElementById('comprarForm');
+      const venderForm = document.getElementById('venderForm');
+      
+      const cryptoSelectComprar = document.getElementById('cryptoSelectComprar');
+      const cryptoPriceElComprar = document.getElementById('cryptoPriceComprar');
+      const refreshBtnComprar = document.getElementById('refreshBtnComprar');
+      
+      const cryptoSelectVender = document.getElementById('cryptoSelectVender');
+      const cryptoPriceElVender = document.getElementById('cryptoPriceVender');
+      const refreshBtnVender = document.getElementById('refreshBtnVender');
+      
+      const loaderEl = document.getElementById('loader');
+      const errorMessageEl = document.getElementById('errorMessage');
+      const updateTimeEl = document.getElementById('updateTime');
+      
+      const resultsElComprar = document.getElementById('resultsComprar');
+      const copyBtnComprar = document.getElementById('copyBtnComprar');
+      const copySuccessElComprar = document.getElementById('copySuccessComprar');
+      const addressResultComprar = document.getElementById('addressResultComprar');
+      
+      const resultsElVender = document.getElementById('resultsVender');
+      const copyBtnVender = document.getElementById('copyBtnVender');
+      const copySuccessElVender = document.getElementById('copySuccessVender');
+      
+      // Tab elements
+      const tabs = document.querySelectorAll('.tab');
+      const tabContents = document.querySelectorAll('.tab-content');
+      
+      // Constants
+      const TIMESTAMP_KEY = 'bitso_data_timestamp';
+      const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
+      const API_URL = 'https://bitso.com/api/v3/ticker/';
+      
+      let cryptoData = {};
+      
+      // CORS Proxy Method
+      async function fetchCryptoDataWithProxy() {
+        loaderEl.style.display = 'block';
+        errorMessageEl.textContent = '';
+        
+        // Store the selected values before refresh
+        const selectedCryptoComprar = cryptoSelectComprar.value;
+        const selectedCryptoVender = cryptoSelectVender.value;
+        
+        try {
+          const proxyUrl = CORS_PROXY + API_URL;
+          const response = await fetch(proxyUrl);
+          
+          if (!response.ok) {
+            throw new Error('Error al obtener datos de Bitso');
+          }
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            processCryptoData(data.payload, selectedCryptoComprar, selectedCryptoVender);
+            updateLastUpdateTime();
+            return true;
+          } else {
+            throw new Error('Error en la respuesta de Bitso API');
+          }
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          errorMessageEl.textContent = 'Error al cargar datos: ' + error.message;
+        } finally {
+          loaderEl.style.display = 'none';
+        }
+      }
+      
+      // Update the last update time display
+      function updateLastUpdateTime() {
+        const timestamp = Date.now().toString();
+        localStorage.setItem(TIMESTAMP_KEY, timestamp);
+        
+        const date = new Date(parseInt(timestamp));
+        updateTimeEl.textContent = `Última actualización: ${date.toLocaleString()}`;
+      }
+      
+      // Process crypto data and populate select dropdowns
+      function processCryptoData(payload, selectedCryptoComprar, selectedCryptoVender) {
+        cryptoSelectComprar.innerHTML = '';
+        cryptoSelectVender.innerHTML = '';
+        cryptoData = {};
+        
+        const mxnPairs = payload.filter(item => item.book.endsWith('_mxn'));
+        
+        if (mxnPairs.length === 0) {
+          errorMessageEl.textContent = 'No se encontraron pares con MXN';
+          return;
+        }
+        
+        // Sort by name
+        mxnPairs.sort((a, b) => {
+          const nameA = a.book.split('_')[0];
+          const nameB = b.book.split('_')[0];
+          return nameA.localeCompare(nameB);
+        });
+        
+        // Store data for later use
+        mxnPairs.forEach(item => {
+          const ticker = item.book.split('_')[0];
+          cryptoData[ticker] = item;
+        });
+        
+        // Populate COMPRAR select dropdown
+        mxnPairs.forEach(item => {
+          const ticker = item.book.split('_')[0];
+          const option = document.createElement('option');
+          option.value = ticker;
+          option.textContent = ticker.toUpperCase();
+          cryptoSelectComprar.appendChild(option);
+        });
+        
+        // Populate VENDER select dropdown
+        mxnPairs.forEach(item => {
+          const ticker = item.book.split('_')[0];
+          const option = document.createElement('option');
+          option.value = ticker;
+          option.textContent = ticker.toUpperCase();
+          cryptoSelectVender.appendChild(option);
+        });
+        
+        // Reselect previously selected crypto or default to BTC
+        if (selectedCryptoComprar && cryptoData[selectedCryptoComprar]) {
+          setSelectValue(cryptoSelectComprar, selectedCryptoComprar);
+        } else {
+          setDefaultCrypto(cryptoSelectComprar);
+        }
+        
+        if (selectedCryptoVender && cryptoData[selectedCryptoVender]) {
+          setSelectValue(cryptoSelectVender, selectedCryptoVender);
+        } else {
+          setDefaultCrypto(cryptoSelectVender);
+        }
+        
+        // Update price displays
+        updatePriceDisplay(cryptoSelectComprar.value, 'comprar');
+        updatePriceDisplay(cryptoSelectVender.value, 'vender');
+      }
+      
+      // Helper to set select value
+      function setSelectValue(selectElement, value) {
+        for (let i = 0; i < selectElement.options.length; i++) {
+          if (selectElement.options[i].value === value) {
+            selectElement.selectedIndex = i;
+            break;
+          }
+        }
+      }
+      
+      // Set BTC as default if available
+      function setDefaultCrypto(selectElement) {
+        const btcOption = Array.from(selectElement.options).find(option => option.value === 'btc');
+        if (btcOption) {
+          setSelectValue(selectElement, 'btc');
+        }
+      }
+      
+      // Update price display when cryptocurrency is selected
+      function updatePriceDisplay(ticker, mode) {
+        if (cryptoData[ticker]) {
+          const price = parseFloat(cryptoData[ticker].last);
+          const formattedPrice = price.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          
+          if (mode === 'comprar') {
+            cryptoPriceElComprar.textContent = `Precio: ${formattedPrice} MXN`;
+          } else {
+            cryptoPriceElVender.textContent = `Precio: ${formattedPrice} MXN`;
+          }
+        } else {
+          if (mode === 'comprar') {
+            cryptoPriceElComprar.textContent = '';
+          } else {
+            cryptoPriceElVender.textContent = '';
+          }
+        }
+      }
+      
+      // COMPRAR form submission handler
+      comprarForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const selectedCrypto = cryptoSelectComprar.value;
+        const markup = parseFloat(document.getElementById('markupComprar').value) / 100;
+        const totalMXN = parseFloat(document.getElementById('totalMXNComprar').value);
+        const address = document.getElementById('addressComprar').value;
+        
+        if (!selectedCrypto || isNaN(markup) || isNaN(totalMXN)) {
+          errorMessageEl.textContent = 'Por favor, complete los campos requeridos correctamente';
+          return;
+        }
+        
+        const cryptoInfo = cryptoData[selectedCrypto];
+        
+        if (!cryptoInfo) {
+          errorMessageEl.textContent = 'Información de criptomoneda no disponible';
+          return;
+        }
+        
+        // Calculate crypto amount
+        const price = parseFloat(cryptoInfo.last);
+        const cryptoAmount = totalMXN / (price * (1 - markup));
+        
+        // Display results
+        document.getElementById('resultAmountComprar').textContent = `${totalMXN.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})} MXN`;
+        document.getElementById('resultPriceComprar').textContent = `${price.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})} MXN / ${selectedCrypto.toUpperCase()}`;
+        document.getElementById('resultMarkupComprar').textContent = `${(markup * 100).toFixed(2)}%`;
+        document.getElementById('resultTotalComprar').textContent = `${cryptoAmount.toFixed(8)} ${selectedCrypto.toUpperCase()}`;
+        
+        // Only show address in results if it was provided
+        if (address && address.trim() !== '') {
+          document.getElementById('resultAddressComprar').textContent = address;
+          addressResultComprar.style.display = 'block';
+        } else {
+          addressResultComprar.style.display = 'none';
+        }
+        
+        resultsElComprar.style.display = 'block';
+        resultsElVender.style.display = 'none';
+      });
+      
+      // VENDER form submission handler
+      venderForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const selectedCrypto = cryptoSelectVender.value;
+        const markup = parseFloat(document.getElementById('markupVender').value) / 100;
+        const cryptoAmount = parseFloat(document.getElementById('cryptoAmountVender').value);
+        
+        if (!selectedCrypto || isNaN(markup) || isNaN(cryptoAmount)) {
+          errorMessageEl.textContent = 'Por favor, complete los campos requeridos correctamente';
+          return;
+        }
+        
+        const cryptoInfo = cryptoData[selectedCrypto];
+        
+        if (!cryptoInfo) {
+          errorMessageEl.textContent = 'Información de criptomoneda no disponible';
+          return;
+        }
+        
+        // Calculate MXN amount
+        const price = parseFloat(cryptoInfo.last);
+        const mxnAmount = cryptoAmount * price * (1 + markup);
+        
+        // Display results
+        document.getElementById('resultCryptoVender').textContent = `${cryptoAmount.toFixed(8)} ${selectedCrypto.toUpperCase()}`;
+        document.getElementById('resultPriceVender').textContent = `${price.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})} MXN / ${selectedCrypto.toUpperCase()}`;
+        document.getElementById('resultMarkupVender').textContent = `${(markup * 100).toFixed(2)}%`;
+        document.getElementById('resultTotalVender').textContent = `${mxnAmount.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})} MXN`;
+        
+        resultsElVender.style.display = 'block';
+        resultsElComprar.style.display = 'none';
+      });
+      
+      // Copy COMPRAR results to clipboard
+      copyBtnComprar.addEventListener('click', function() {
+        let resultText = `Cantidad: ${document.getElementById('resultAmountComprar').textContent}
+Precio: ${document.getElementById('resultPriceComprar').textContent}
+Tasa: ${document.getElementById('resultMarkupComprar').textContent}
+\nTotal a Recibir: ${document.getElementById('resultTotalComprar').textContent}`;
+
+        // Only include address if it was provided
+        if (addressResultComprar.style.display !== 'none') {
+          resultText += `\nDirección: ${document.getElementById('resultAddressComprar').textContent}`;
+        }
+        
+        navigator.clipboard.writeText(resultText).then(() => {
+          copySuccessElComprar.style.opacity = '1';
+          setTimeout(() => {
+            copySuccessElComprar.style.opacity = '0';
+          }, 2000);
+        }).catch(err => {
+          console.error('Error al copiar: ', err);
+          errorMessageEl.textContent = 'Error al copiar al portapapeles';
+        });
+      });
+      
+      // Copy VENDER results to clipboard
+      copyBtnVender.addEventListener('click', function() {
+        const resultText = `Criptomoneda: ${document.getElementById('resultCryptoVender').textContent}
+Precio: ${document.getElementById('resultPriceVender').textContent}
+Tasa: ${document.getElementById('resultMarkupVender').textContent}
+\nTotal a Pagar: ${document.getElementById('resultTotalVender').textContent}`;
+        
+        navigator.clipboard.writeText(resultText).then(() => {
+          copySuccessElVender.style.opacity = '1';
+          setTimeout(() => {
+            copySuccessElVender.style.opacity = '0';
+          }, 2000);
+        }).catch(err => {
+          console.error('Error al copiar: ', err);
+          errorMessageEl.textContent = 'Error al copiar al portapapeles';
+        });
+      });
+      
+      // Tab switching functionality
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const targetTab = tab.getAttribute('data-tab');
+          
+          // Update active tab
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          
+          // Show correct tab content
+          tabContents.forEach(content => {
+            content.classList.remove('active');
+          });
+          document.getElementById(`${targetTab}Content`).classList.add('active');
+          
+          // Hide results when switching tabs
+          resultsElComprar.style.display = 'none';
+          resultsElVender.style.display = 'none';
+        });
+      });
+      
+      // Event Listeners
+      cryptoSelectComprar.addEventListener('change', function() {
+        updatePriceDisplay(this.value, 'comprar');
+      });
+      
+      cryptoSelectVender.addEventListener('change', function() {
+        updatePriceDisplay(this.value, 'vender');
+      });
+      
+      refreshBtnComprar.addEventListener('click', function() {
+        fetchCryptoDataWithProxy();
+      });
+      
+      refreshBtnVender.addEventListener('click', function() {
+        fetchCryptoDataWithProxy();
+      });
+      
+      // Initial data load
+      fetchCryptoDataWithProxy();
+    });
+  </script>
+</body>
+</html>
